@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/deichindianer/semver-go/pkg/sem"
+	"github.com/Deichindianer/semver-go/pkg/sem"
 )
 
 func main() {
