@@ -153,7 +153,7 @@ func ParseVersion(version string) (*Ver, error) {
 }
 
 // GetAllVersion returns a sorted list of all available git tags, if they all are SemVer compliant
-func GetAllVersions(dir string) ([]*Ver, error) {
+func GetAllVersions(dir string, skipParseErrors bool) ([]*Ver, error) {
 	if err := os.Chdir(dir); err != nil {
 		return nil, err
 	}
@@ -170,6 +170,9 @@ func GetAllVersions(dir string) ([]*Ver, error) {
 		}
 		version, err := ParseVersion(tag)
 		if err != nil {
+			if skipParseErrors {
+				continue
+			}
 			return nil, err
 		}
 		versionList = append(versionList, version)
@@ -181,8 +184,8 @@ func GetAllVersions(dir string) ([]*Ver, error) {
 var ErrNoVersionsAvailable = errors.New("no versions available")
 
 // GetLatestVersion gets all versions and returns the latest one
-func GetLatestVersion(dir string) (*Ver, error) {
-	versionList, err := GetAllVersions(dir)
+func GetLatestVersion(dir string, ignoreNonSemVerTags bool) (*Ver, error) {
+	versionList, err := GetAllVersions(dir, ignoreNonSemVerTags)
 	if err != nil {
 		return nil, err
 	}

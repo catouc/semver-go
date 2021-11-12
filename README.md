@@ -22,6 +22,14 @@ $ semver patch
 v1.0.1
 ```
 
+If you are facing issues with a few tags not being compliant with SemVer you can use the `-i` flag to ignore parsing errors.
+
+```sh
+# git repository with a tag like v.2.0.0 and a latest "real" tag like v1.0.0
+$ semver -i patch
+v1.0.1
+```
+
 ## Sem package usage
 
 Find most of the detailed docs on [pkg.go.dev](https://pkg.go.dev/github.com/Deichindianer/semver-go).
