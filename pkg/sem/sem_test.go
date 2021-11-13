@@ -19,17 +19,17 @@ func TestVersionKindIsValid(t *testing.T) {
 	}{
 		{
 			name:   "Major",
-			inKind: 0,
-			err:    nil,
-		},
-		{
-			name:   "Minor",
 			inKind: 1,
 			err:    nil,
 		},
 		{
-			name:   "Patch",
+			name:   "Minor",
 			inKind: 2,
+			err:    nil,
+		},
+		{
+			name:   "Patch",
+			inKind: 3,
 			err:    nil,
 		},
 		{
@@ -40,6 +40,11 @@ func TestVersionKindIsValid(t *testing.T) {
 		{
 			name:   "TooLow",
 			inKind: -1,
+			err:    ErrInvalidKind,
+		},
+		{
+			name:   "Invalid",
+			inKind: 0,
 			err:    ErrInvalidKind,
 		},
 	}
