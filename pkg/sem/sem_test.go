@@ -257,10 +257,11 @@ func TestParseVersion(t *testing.T) {
 
 func TestGetAllVersions(t *testing.T) {
 	testData := []struct {
-		name    string
-		cmdList []*exec.Cmd
-		out     []*Ver
-		err     error
+		name                string
+		cmdList             []*exec.Cmd
+		ignoreNonSemVerTags bool
+		out                 []*Ver
+		err                 error
 	}{
 		{
 			name:    "ValidVersionListSingleTag",
@@ -347,6 +348,27 @@ func TestGetAllVersions(t *testing.T) {
 			err: nil,
 		},
 		{
+			name: "ValidAndInvalidVersionListMultiPrefixIgnoreInvalidTags",
+			cmdList: []*exec.Cmd{
+				exec.Command("git", "tag", "v2.1.0"),
+				exec.Command("git", "tag", "a2.0.1"),
+				exec.Command("git", "tag", "a.2.0.1"),
+				exec.Command("git", "tag", "h2.0.0"),
+				exec.Command("git", "tag", "d1.1.0"),
+				exec.Command("git", "tag", "a-.2.0.1"),
+				exec.Command("git", "tag", "w1.0.0"),
+			},
+			ignoreNonSemVerTags: true,
+			out: []*Ver{
+				{"w", 1, 0, 0},
+				{"d", 1, 1, 0},
+				{"h", 2, 0, 0},
+				{"a", 2, 0, 1},
+				{"v", 2, 1, 0},
+			},
+			err: nil,
+		},
+		{
 			name: "InvalidVersionListNegativeVersions",
 			cmdList: []*exec.Cmd{
 				exec.Command("git", "tag", "v-1.-1.-1")},
@@ -359,6 +381,14 @@ func TestGetAllVersions(t *testing.T) {
 				exec.Command("git", "tag", "☹️1.1.1")},
 			out: nil,
 			err: ErrParseVersionFault,
+		},
+		{
+			name: "InvalidVersionListEmojiIgnoreInvalidTags",
+			cmdList: []*exec.Cmd{
+				exec.Command("git", "tag", "☹️1.1.1")},
+			ignoreNonSemVerTags: true,
+			out:                 []*Ver{},
+			err:                 nil,
 		},
 		{
 			name:    "NoVersions",
@@ -374,7 +404,7 @@ func TestGetAllVersions(t *testing.T) {
 			if err := setupTemporaryGitRepository(tmpDir, td.cmdList); err != nil {
 				t.Fatal(err)
 			}
-			versionList, err := GetAllVersions(tmpDir)
+			versionList, err := GetAllVersions(tmpDir, td.ignoreNonSemVerTags)
 			if err != td.err {
 				t.Errorf("expected error %s got %s", td.err, err)
 			}
@@ -394,10 +424,11 @@ func TestGetAllVersions(t *testing.T) {
 
 func TestGetLatestVersion(t *testing.T) {
 	testData := []struct {
-		name    string
-		cmdList []*exec.Cmd
-		out     *Ver
-		err     error
+		name                string
+		cmdList             []*exec.Cmd
+		ignoreNonSemVerTags bool
+		out                 *Ver
+		err                 error
 	}{
 		{
 			name:    "ValidVersionListSingleTag",
@@ -466,6 +497,21 @@ func TestGetLatestVersion(t *testing.T) {
 			err: nil,
 		},
 		{
+			name: "ValidAndInvalidVersionListMultiPrefixIgnoreInvalidTags",
+			cmdList: []*exec.Cmd{
+				exec.Command("git", "tag", "v2.1.0"),
+				exec.Command("git", "tag", "a2.0.1"),
+				exec.Command("git", "tag", "a.2.0.1"),
+				exec.Command("git", "tag", "h2.0.0"),
+				exec.Command("git", "tag", "d1.1.0"),
+				exec.Command("git", "tag", "a-.2.0.1"),
+				exec.Command("git", "tag", "w1.0.0"),
+			},
+			ignoreNonSemVerTags: true,
+			out:                 &Ver{"v", 2, 1, 0},
+			err:                 nil,
+		},
+		{
 			name: "InvalidVersionListNegativeVersions",
 			cmdList: []*exec.Cmd{
 				exec.Command("git", "tag", "v-1.-1.-1")},
@@ -479,6 +525,14 @@ func TestGetLatestVersion(t *testing.T) {
 			out: nil,
 			err: ErrParseVersionFault,
 		},
+		{
+			name: "InvalidVersionListEmojiIgnoreInvalidTags",
+			cmdList: []*exec.Cmd{
+				exec.Command("git", "tag", "☹️1.1.1")},
+			ignoreNonSemVerTags: true,
+			out:                 &Ver{},
+			err:                 ErrNoVersionsAvailable,
+		},
 	}
 
 	for _, td := range testData {
@@ -487,7 +541,7 @@ func TestGetLatestVersion(t *testing.T) {
 			if err := setupTemporaryGitRepository(tmpDir, td.cmdList); err != nil {
 				t.Fatal(err)
 			}
-			version, err := GetLatestVersion(tmpDir)
+			version, err := GetLatestVersion(tmpDir, td.ignoreNonSemVerTags)
 			if err != td.err {
 				t.Errorf("expected error %s got %s", td.err, err)
 			}
@@ -501,14 +555,14 @@ func TestGetLatestVersion(t *testing.T) {
 }
 
 func TestGetAllVersionsInvalidDir(t *testing.T) {
-	_, err := GetAllVersions(filepath.Join(".", "NaD"))
+	_, err := GetAllVersions(filepath.Join(".", "NaD"), false)
 	if errors.Is(err, os.ErrInvalid) {
 		t.Errorf("expected err to be os.PathError got: %s", err)
 	}
 }
 
 func TestGetAllVersionsNoGitDir(t *testing.T) {
-	_, err := GetAllVersions(t.TempDir())
+	_, err := GetAllVersions(t.TempDir(), false)
 	if err == nil {
 		t.Error("expected err got nil")
 	}
