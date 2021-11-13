@@ -17,17 +17,11 @@ func main() {
 	flag.Parse()
 
 	flag.Usage = func() {
-		fmt.Fprint(os.Stderr, "Usage: semver <kind>\nKind can be one of major,minor,patch\n")
+		fmt.Fprint(os.Stderr, "Usage: semver <kind>\nKind can be one of major,minor,patch,current\n")
 		flag.PrintDefaults()
 	}
 
 	if len(flag.Args()) != 1 {
-		flag.Usage()
-		os.Exit(1)
-	}
-
-	kind, err := sem.ParseKind(flag.Args()[0])
-	if err != nil {
 		flag.Usage()
 		os.Exit(1)
 	}
@@ -37,6 +31,7 @@ func main() {
 		fmt.Printf("Failed to get working directory: %s\n", err)
 		os.Exit(1)
 	}
+
 	latestVersion, err := sem.GetLatestVersion(curDir, *ignoreNonSemVerTags)
 	if err != nil {
 		if errors.Is(err, sem.ErrNoVersionsAvailable) {
@@ -48,6 +43,20 @@ func main() {
 			os.Exit(1)
 		}
 	}
+
+	k := flag.Args()[0]
+
+	if k == "current" {
+		fmt.Println(latestVersion)
+		os.Exit(0)
+	}
+
+	kind, err := sem.ParseKind(flag.Args()[0])
+	if err != nil {
+		flag.Usage()
+		os.Exit(1)
+	}
+
 	if err := latestVersion.Next(kind); err != nil {
 		fmt.Printf("Failed to get next version: %s\n", err)
 		os.Exit(1)
