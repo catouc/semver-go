@@ -1,3 +1,3 @@
-module github.com/Deichindianer/semver-go
+module github.com/catouc/semver-go
 
 go 1.16

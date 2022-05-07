@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Deichindianer/semver-go/pkg/sem"
+	"github.com/catouc/semver-go/pkg/sem"
 )
 
 var (
