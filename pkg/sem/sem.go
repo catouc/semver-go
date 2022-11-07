@@ -152,7 +152,7 @@ func ParseVersion(version string) (*Ver, error) {
 	return ver, nil
 }
 
-// GetAllVersion returns a sorted list of all available git tags, if they all are SemVer compliant
+// GetAllVersions returns a sorted list of all available git tags, if they all are SemVer compliant
 func GetAllVersions(dir string, skipParseErrors bool) ([]*Ver, error) {
 	if err := os.Chdir(dir); err != nil {
 		return nil, err
